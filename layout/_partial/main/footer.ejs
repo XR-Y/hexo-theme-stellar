@@ -28,6 +28,59 @@ function layoutDiv() {
   if (content) {
     el += markdown(content)
   }
+  const extractNum = str => parseInt(str.match(/\d+/)[0], 10);
+  const wowWord = extractNum(totalcount(site)) / 10;
+  let books = [
+      { limit: 300, title: "司马光 的《资治通鉴》" },
+      { limit: 150, title: "阿耐 的《大江东去》" },
+      { limit: 125, title: "金庸 的《天龙八部》" },
+      { limit: 100, title: "金庸 的《笑傲江湖》" },
+      { limit: 85, title: "路遥 的《平凡的世界》" },
+      { limit: 80, title: "我国著名的四大名著之一《水浒传》" },
+      { limit: 75, title: "我国著名的四大名著之一《红楼梦》" },
+      { limit: 70, title: "我国著名的四大名著之一《西游记》" },
+      { limit: 65, title: "老舍 的《四世同堂》" },
+      { limit: 60, title: "我国著名的四大名著之一《三国演义》" },
+      { limit: 50, title: "陈忠实 的《白鹿原》" },
+      { limit: 45, title: "霍达 的《穆斯林的葬礼》" },
+      { limit: 43, title: "贾平凹 的《秦腔》" },
+      { limit: 40, title: "闫真 的《沧浪之水》" },
+      { limit: 35, title: "东野圭吾 的《白夜行》" },
+      { limit: 34, title: "雨果 的《巴黎圣母院》" },
+      { limit: 32, title: "吴敬梓 的《儒林外史》" },
+      { limit: 31, title: "阿来 的《尘埃落定》" },
+      { limit: 30, title: "茅盾 的《子夜》" },
+      { limit: 28, title: "茨威格 的《昨日的世界》" },
+      { limit: 26, title: "埃德加·斯诺 的《红星照耀中国》" },
+      { limit: 25, title: "钱钟书 的《围城》" },
+      { limit: 23, title: "简·奥斯汀 的《傲慢与偏见》" },
+      { limit: 22, title: "加西亚·马尔克斯 的《百年孤独》" },
+      { limit: 21, title: "老舍 的《骆驼祥子》" },
+      { limit: 20, title: "刘慈欣 的《三体Ⅰ》" },
+      { limit: 19, title: "卡勒德·胡塞尼 的《追风筝的人》" },
+      { limit: 18, title: "沈从文 的《边城》" },
+      { limit: 17, title: "萧红 的《呼兰河传》" },
+      { limit: 16, title: "王小波 的《沉默的大多数》" },
+      { limit: 15, title: "鲁迅 的《狂人日记》" },
+      { limit: 14, title: "白先勇 的《台北人》" },
+      { limit: 13, title: "曹禺 的《雷雨》" },
+      { limit: 12, title: "余华 的《活着》" },
+      { limit: 11, title: "鲁迅 的《彷徨》" },
+      { limit: 10, title: "杨绛 的《我们仨》" },
+      { limit: 9, title: "林海音 的《城南旧事》" },
+      { limit: 7, title: "鲁迅 的《呐喊》" },
+      { limit: 5, title: "埃克苏佩里 的《小王子》" },
+      { limit: 3, title: "王小波 的《黄金时代》" },
+      { limit: 1, title: "瞿秋白 的《多余的话》" }
+  ];
+  let wowBook = books.find(book => wowWord >= book.limit);
+  wowBook = wowBook ? `写完一本 ${wowBook.title} 了！` : "";
+  let gtime_days = Math.floor((new Date() - new Date('2023.04.17 13:19:52')) / 1000 / 60 / 60 / 24);
+
+  el += '<span style="scrollbar-width: none; color: var(--text-p2);">发表了 ' + site.posts.length + ' 篇文章 · </span>'
+  el += '<span style="color: var(--text-p2);">总计 ' + totalcount(site) + ' 字 · </span>'
+  el += '<span style="color: var(--text-p2);">' + wowBook + '</span><br>'
+  el += '<span style="color: var(--text-p2);">© ' + new Date().getFullYear() + ' 🌖已经运行 '+ gtime_days + ' 天🌘' + '</span>'
   el += '</div></footer>'
   return el
 }

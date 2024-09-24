@@ -69,12 +69,12 @@ function div_default() {
   // meta
   el += '<div class="meta cap">';
   el += '<span class="cap" id="post-meta">';
-  el += '📆 ';
+  el += icon('default:calendar');
   // time
   el += `<time datetime="${date_xml(post.date)}">${date(post.date, config.date_format)}</time>`
   el += '</span>';
   // 字数统计
-  el += '<span class="post-count" style="font-size: 12px; color: var(--text-p2);">' + '✒️ ' + wordcount(post.content) + ' 字</span>';
+  el += '<span class="post-count" style="font-size: 12px; color: var(--text-p2);">' + '✒️ ' + wordcount(page.content) + ' 字</span>';
   el += '</span>';
   // cat
   if (post.categories && post.categories.length > 0) {
