@@ -475,11 +475,11 @@ data_services:
   # 打分
   rating:
     js: /js/services/rating.js
-    api: https://star-vote.xaox.cc/api/rating
+    api: https://vote.xryuu.com/api/rating
   # 投票
   vote:
     js: /js/services/vote.js
-    api: https://star-vote.xaox.cc/api/vote
+    api: https://vote.xryuu.com/api/vote
   # 网格布局类
   sites:
     js: /js/services/sites.js
