@@ -1,10 +1,45 @@
 <script type="module">
   const el = document.getElementById('twikoo_container');
-  util.viewportLazyload(el, load_twikoo, <%= theme.comments.lazyload ?? false %>);
+  const enableLazyload = <%= theme.comments.lazyload ?? false %>;
+  let twikooScriptPromise = null;
+  let twikooInitialized = false;
+
+  function ensureTwikooScript() {
+    if (twikooScriptPromise) {
+      return twikooScriptPromise;
+    }
+    twikooScriptPromise = utils.js('<%- theme.comments.twikoo.js %>', {defer: true});
+    return twikooScriptPromise;
+  }
+
+  function scheduleTwikooPreload() {
+    if (!el || !enableLazyload) return;
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => ensureTwikooScript(), { timeout: 2000 });
+    } else {
+      window.setTimeout(() => ensureTwikooScript(), 1200);
+    }
+  }
+
+  if (!enableLazyload || !('IntersectionObserver' in window)) {
+    load_twikoo();
+  } else {
+    scheduleTwikooPreload();
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0] && entries[0].isIntersecting) {
+        load_twikoo();
+        observer.disconnect();
+      }
+    }, {
+      rootMargin: '900px 0px 900px 0px'
+    });
+    observer.observe(el);
+  }
 
   function load_twikoo() {
-    if (!el) return;
-    utils.js('<%- theme.comments.twikoo.js %>', {defer: true}).then(function () {
+    if (!el || twikooInitialized) return;
+    twikooInitialized = true;
+    ensureTwikooScript().then(function () {
       const path = el.getAttribute('comment_id') ?? decodeURI(window.location.pathname);
       twikoo.init(Object.assign(<%- JSON.stringify(theme.comments.twikoo) %>, {
         el: '#twikoo_container',
