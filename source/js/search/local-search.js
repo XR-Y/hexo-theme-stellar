@@ -1,5 +1,50 @@
 var searchCache = null;
 var searchCacheKey = 'search_cache_v1';
+var searchDataPromise = null;
+
+function resolveSearchPath(path) {
+  if (path.startsWith('/')) {
+    path = path.substring(1);
+  }
+  return ctx.root + path;
+}
+
+function loadSearchData(path) {
+  if (searchCache) {
+    return Promise.resolve(searchCache);
+  }
+  if (searchDataPromise) {
+    return searchDataPromise;
+  }
+
+  try {
+    var cached = localStorage.getItem(searchCacheKey);
+    if (cached) {
+      searchCache = JSON.parse(cached);
+      return Promise.resolve(searchCache);
+    }
+  } catch (e) {
+    console.warn('搜索缓存解析失败', e);
+  }
+
+  searchDataPromise = fetch(path)
+    .then(function(res) { return res.json(); })
+    .then(function(json) {
+      searchCache = json;
+      try {
+        localStorage.setItem(searchCacheKey, JSON.stringify(json));
+      } catch (e) {
+        console.warn('搜索缓存写入失败', e);
+      }
+      return json;
+    })
+    .catch(function(err) {
+      searchDataPromise = null;
+      throw err;
+    });
+
+  return searchDataPromise;
+}
 
 var searchFunc = function(path, filter, wrapperId, searchId, contentId) {
 
@@ -114,60 +159,31 @@ var searchFunc = function(path, filter, wrapperId, searchId, contentId) {
     });
   }
 
-  if (!searchCache) {
-    // 数据还没准备好，延迟初始化
-    const timer = setInterval(() => {
-      if (searchCache) {
-        clearInterval(timer);
-        initSearch(searchCache);
-      }
-    }, 100);
-  } else {
-    initSearch(searchCache);
-  }
+  loadSearchData(path).then(initSearch).catch(function(err) {
+    console.warn('搜索索引加载失败', err);
+  });
 };
 
 utils.jq(() => {
-  (function preloadSearchData() {
-    var path = ctx.search.path;
-    if (path.startsWith('/')) {
-      path = path.substring(1);
-    }
-    path = ctx.root + path;
-
-    try {
-      var cached = localStorage.getItem(searchCacheKey);
-      if (cached) {
-        searchCache = JSON.parse(cached);
-      }
-    } catch (e) {
-      console.warn('搜索缓存解析失败', e);
-    }
-
-    fetch(path)
-      .then(res => res.json())
-      .then(json => {
-        searchCache = json;
-        try {
-          localStorage.setItem(searchCacheKey, JSON.stringify(json));
-        } catch (e) {
-          console.warn('搜索缓存写入失败', e);
-        }
-      });
-  })();
-
   var $inputArea = $("input#search-input");
   if ($inputArea.length == 0) return;
   var $resultArea = document.querySelector("div#search-result");
+  var path = resolveSearchPath(ctx.search.path);
+  var searchInitialized = false;
 
-  $inputArea.focus(function() {
-    var path = ctx.search.path;
-    if (path.startsWith('/')) {
-      path = path.substring(1);
-    }
-    path = ctx.root + path;
+  function ensureSearchReady() {
+    if (searchInitialized) return;
+    searchInitialized = true;
     const filter = $inputArea.attr('data-filter') || '';
     searchFunc(path, filter, 'search-wrapper', 'search-input', 'search-result');
+  }
+
+  $inputArea.focus(function() {
+    ensureSearchReady();
+  });
+
+  $inputArea.one('input', function() {
+    ensureSearchReady();
   });
 
   $inputArea.keydown(function(e) {

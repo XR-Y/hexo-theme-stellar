@@ -79,15 +79,44 @@ function preconnect() {
 }
 
 function custom_inject() {
+  const articleLayouts = ['post', 'page', 'wiki', 'note'];
+  const isArticleLike = articleLayouts.includes(page.layout);
+  const isListLike = is_home() || is_category() || is_tag() || is_archive() || ['index_topic', 'notebooks', 'notes', '404'].includes(page.layout);
+
+  function shouldIncludeHeadInject(item) {
+    if (typeof item !== 'string') {
+      return true;
+    }
+    if (item.includes('/css/callouts_blocks.css') || item.includes('/css/table_dataview.css')) {
+      return !isListLike;
+    }
+    if (item.includes('/js/services/txmap.js')) {
+      return is_home();
+    }
+    if (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) {
+      return is_home();
+    }
+    if (item.includes('/js/services/aisummary.js') || item.includes('/js/services/link_icon.js')) {
+      return isArticleLike;
+    }
+    return true;
+  }
+
   var el = '';
   for (let item of (config.inject?.head || [])) {
-    el += item;
+    if (shouldIncludeHeadInject(item)) {
+      el += item;
+    }
   }
   for (let item of (theme.inject?.head || [])) {
-    el += item;
+    if (shouldIncludeHeadInject(item)) {
+      el += item;
+    }
   }
   for (let item of (page.inject?.head || [])) {
-    el += item;
+    if (shouldIncludeHeadInject(item)) {
+      el += item;
+    }
   }
   return el;
 }
