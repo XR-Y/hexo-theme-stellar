@@ -1,6 +1,12 @@
 utils.jq(() => {
   const els = Array.from(document.getElementsByClassName('ds-memos'));
 
+  function decorateMemoContent(content) {
+    return (content || '').replace(/(^|[\s(>])#([^\s#.,!?;:，。！？；：]+)/g, (match, prefix, tag) => {
+      return `${prefix}<span class="memo-tag" data-tag="${tag}">#${tag}</span>`;
+    });
+  }
+
   els.forEach(el => {
     const api = el.dataset.api;
     if (!api) return;
@@ -24,10 +30,11 @@ utils.jq(() => {
 
     async function createMemoCell(item, memos, users, hide, default_avatar, host) {
       const versionHandler = versionHandlers[memos.version] || versionHandlers["feature"];
+      const renderedContent = marked.parse(decorateMemoContent(item.content || ''));
       return `<div class="timenode">
                       <div class="header">${!users.length && !hide.includes('user') ? await versionHandler.buildUser(item, memos, default_avatar) : ''}
                       <span>${versionHandler.buildDate(item).toLocaleString()}</span></div>
-                      <div class="body">${marked.parse(item.content || '')}
+                      <div class="body">${renderedContent}
                       <div class="tag-plugin image">${versionHandler.buildImages(item, host).join('')}</div>
                       </div></div>`;
     }
@@ -36,10 +43,10 @@ utils.jq(() => {
     const versionHandlers = {
       "22-": {
         buildUser: async (item, memos, default_avatar) =>
-            `<div class="user-info">${default_avatar ? `<img src="${default_avatar}">` : ''}<span>${item.creatorName}</span></div>`,
+            `<div class="user-info">${default_avatar ? `<img src="${default_avatar}" alt="${item.creatorName || 'memos'} 的头像">` : ''}<span>${item.creatorName}</span></div>`,
         buildDate: item => new Date(item.createdTs * 1000),
         buildImages: (item, host) => (item.resourceList || []).filter(res => res.type?.includes('image/')).map(res =>
-            `<div class="image-bg"><img src="${res.externalLink || `https://${host}/o/r/${res.id}`}"></div>`
+            `<div class="image-bg"><img src="${res.externalLink || `https://${host}/o/r/${res.id}`}" alt="记忆碎片配图"></div>`
         )
       },
       "22+": {
@@ -65,11 +72,11 @@ utils.jq(() => {
           }
           const name = user ? user.nickname || user.username : 'memos';
           const avatarUrl = user?.avatarUrl ? `${memos.site}${user.avatarUrl}` : default_avatar || '';
-          return `<div class="user-info">${avatarUrl ? `<img src="${avatarUrl}">` : ''}<span>${name}</span></div>`;
+          return `<div class="user-info">${avatarUrl ? `<img src="${avatarUrl}" alt="${name} 的头像">` : ''}<span>${name}</span></div>`;
         },
         buildDate: item => new Date(item.createTime),
         buildImages: (item) => (item.resources || []).filter(res => res.type?.includes('image/')).map(res =>
-            `<div class="image-bg"><img src="${res.externalLink || `https://${host}/o/r/${res.id}`}"></div>`
+            `<div class="image-bg"><img src="${res.externalLink || `https://${host}/o/r/${res.id}`}" alt="记忆碎片配图"></div>`
         )
       },
       "feature": {

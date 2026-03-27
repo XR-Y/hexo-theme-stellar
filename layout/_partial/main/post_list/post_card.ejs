@@ -11,11 +11,11 @@ if (poster) {
 }
 function div_default() {
   var el = '';
-  el += '<article class="md-text">';
+  var cover_url = null;
+  var category_meta = '';
 
   // 封面
   if (obj.image || theme.article.auto_cover) {
-    var cover_url;
     if (obj.image != undefined) {
       if (obj.image.includes('/')) {
         cover_url = obj.image;
@@ -37,11 +37,32 @@ function div_default() {
         cover_url = 'https://source.unsplash.com/random/1280x640';
       }
     }
-    if (cover_url) {
-      el += '<div class="post-cover">';
-      el += '<img src="' + cover_url + '" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>';
-      el += '</div>';
+  }
+
+  if (post.categories && post.categories.length > 0) {
+    var cats = [];
+    post.categories.forEach((cat) => {
+      cats.push(cat.name);
+    });
+    if (cats.length > 0) {
+      let lastCat = cats[cats.length - 1];
+      category_meta += '<span class="cap breadcrumb"' + category_color(lastCat) + '>';
+      category_meta += icon('default:category');
+      category_meta += `<span>${lastCat}</span>`;
+      category_meta += '</span>';
     }
+  }
+
+  el += '<article class="md-text' + (cover_url ? ' with-cover' : '') + '">';
+
+  if (cover_url) {
+    el += '<div class="post-cover compact">';
+    el += '<img src="' + cover_url + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" alt="' + (post.title || 'post cover') + '"/>';
+    el += '</div>';
+  }
+
+  if (cover_url) {
+    el += '<div class="post-main">';
   }
 
   // 标题
@@ -73,32 +94,18 @@ function div_default() {
   // time
   el += `<time datetime="${date_xml(post.date)}">${date(post.date, config.date_format)}</time>`
   el += '</span>';
+  if (category_meta) {
+    el += category_meta;
+  }
   // 字数统计
   el += '<span class="post-count" style="font-size: 12px; color: var(--text-p2);">' + '✒️ ' + wordcount(post.content) + ' 字</span>';
-  el += '</span>';
-  // cat
-  if (post.categories && post.categories.length > 0) {
-    if (post.layout === 'post' && post.categories && post.categories.length > 0) {
-      var cats = [];
-      if (post.categories) {
-        post.categories.forEach((cat, i) => {
-          cats.push(cat.name);
-        });
-      }
-      if (cats.length > 0) {
-        let str = cats.join(' / ');
-        let lastCat = cats.pop();
-        el += '<span class="cap breadcrumb"' + category_color(lastCat) + '>';
-        el += icon('default:category')
-        el += `<span>${str}</span>`
-        el += '</span>';
-      }
-    }
-  }
   if (post.sticky) {
     el += `<span class="pin">${icon('default:pin')}</span>`
   }
   el += '</div>';
+  if (cover_url) {
+    el += '</div>';
+  }
   el += '</article>';
   return el;
 }

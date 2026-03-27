@@ -1,16 +1,28 @@
 <script defer src="<%- conf.js %>"></script>
 <script>
   window.addEventListener('DOMContentLoaded', (event) => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const slideUp = {
       distance: `<%- conf.distance %>`,
-      duration: `<%- conf.duration %>`,
-      interval: `<%- conf.interval %>`,
+      duration: prefersReducedMotion ? 1 : `<%- conf.duration %>`,
+      interval: prefersReducedMotion ? 0 : `<%- conf.interval %>`,
       scale: `<%- conf.scale %>`,
-      opacity: 0,
+      opacity: prefersReducedMotion ? 1 : 0,
       easing: "ease-out"
     };
+    const homePostCards = {
+      distance: prefersReducedMotion ? '0px' : '20px',
+      duration: prefersReducedMotion ? 1 : 720,
+      interval: prefersReducedMotion ? 0 : 90,
+      scale: 1,
+      opacity: prefersReducedMotion ? 1 : 0,
+      origin: 'bottom',
+      viewFactor: 0.12,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+    };
     ScrollReveal({ container: '.widgets' }).reveal('.slide-up', { ...slideUp });
-    ScrollReveal({ container: '.l_main' }).reveal('.slide-up', { ...slideUp });
+    ScrollReveal({ container: '.l_main' }).reveal('.slide-up:not(.post-card)', { ...slideUp });
+    ScrollReveal({ container: '.l_main' }).reveal('.l_body.index .l_main .post-list .post-card.slide-up', { ...homePostCards });
     ScrollReveal({ container: '.l_right' }).reveal('.slide-up', { ...slideUp });
   });
 </script>

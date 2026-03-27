@@ -1,6 +1,9 @@
 <script type="module">
   const el = document.getElementById('twikoo_container');
   const enableLazyload = <%= theme.comments.lazyload ?? false %>;
+  const twikooConfig = Object.assign({}, <%- JSON.stringify(theme.comments.twikoo) %>, {
+    js: 'https://registry.npmmirror.com/twikoo/1.6.44/files/dist/twikoo.min.js'
+  });
   let twikooScriptPromise = null;
   let twikooInitialized = false;
 
@@ -8,7 +11,7 @@
     if (twikooScriptPromise) {
       return twikooScriptPromise;
     }
-    twikooScriptPromise = utils.js('<%- theme.comments.twikoo.js %>', {defer: true});
+    twikooScriptPromise = utils.js(twikooConfig.js, {defer: true});
     return twikooScriptPromise;
   }
 
@@ -41,7 +44,7 @@
     twikooInitialized = true;
     ensureTwikooScript().then(function () {
       const path = el.getAttribute('comment_id') ?? decodeURI(window.location.pathname);
-      twikoo.init(Object.assign(<%- JSON.stringify(theme.comments.twikoo) %>, {
+      twikoo.init(Object.assign(twikooConfig, {
         el: '#twikoo_container',
         path: path,
       }));
