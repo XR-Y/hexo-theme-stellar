@@ -87,7 +87,11 @@ const extractNum = str => parseInt(str.match(/\d+/)[0], 10);
   wowBook = wowBook ? `写完一本 ${wowBook.title} 了！` : "";
   let gtime_days = Math.floor((new Date() - new Date('2023.04.17 13:19:52')) / 1000 / 60 / 60 / 24);
 
-  el += '<script>upgrade_time_days = Math.floor((new Date() - new Date(' + page.updated + ')) / 1000 / 60 / 60 / 24);</script>'
+  if (page.updated) {
+    el += '<script>upgrade_time_days = Math.floor((new Date() - new Date(' + page.updated + ')) / 1000 / 60 / 60 / 24);</script>'
+  } else {
+    el += '<script>upgrade_time_days = 0;</script>'
+  }
   el += '<span style="scrollbar-width: none; color: var(--text-p2);">发表了 ' + site.posts.length + ' 篇文章 · </span>'
   el += '<span style="color: var(--text-p2);">总计 ' + totalcount(site) + ' 字 · </span>'
   el += '<span style="color: var(--text-p2);">' + wowBook + '</span><br>'

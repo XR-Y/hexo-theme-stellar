@@ -78,6 +78,14 @@ function preconnect() {
   return el;
 }
 
+function render_async_stylesheet(href) {
+  return `<link rel="preload" as="style" href="${href}"><link rel="stylesheet" href="${href}" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="${href}"></noscript>`;
+}
+
+function render_home_txmap_loader() {
+  return `<script>(function(){function loadTxmap(){if(window.__txmapLoaderStarted)return;window.__txmapLoaderStarted=true;var s=document.createElement('script');s.src='/js/services/txmap.js';s.async=true;s.setAttribute('data-pjax','');document.head.appendChild(s);}function watch(){var target=document.getElementById('welcome-info');if(!target){if('requestIdleCallback'in window){requestIdleCallback(loadTxmap,{timeout:2500});}else{setTimeout(loadTxmap,1800);}return;}if('IntersectionObserver'in window){var io=new IntersectionObserver(function(entries){if(entries.some(function(entry){return entry.isIntersecting;})){io.disconnect();loadTxmap();}},{rootMargin:'280px 0px 280px 0px'});io.observe(target);}else{if('requestIdleCallback'in window){requestIdleCallback(loadTxmap,{timeout:2000});}else{setTimeout(loadTxmap,1600);}}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',watch,{once:true});}else{watch();}})();</script>`;
+}
+
   function custom_inject() {
   const articleLayouts = ['post', 'page', 'wiki', 'note'];
   const isArticleLike = articleLayouts.includes(page.layout);
@@ -112,17 +120,41 @@ function preconnect() {
   var el = '';
   for (let item of (config.inject?.head || [])) {
     if (shouldIncludeHeadInject(item)) {
-      el += item;
+      if (typeof item === 'string' && item.includes('https://gw.alipayobjects.com/os/k/jinkai/style.css') && is_home()) {
+        el += render_async_stylesheet('https://gw.alipayobjects.com/os/k/jinkai/style.css');
+      } else if (typeof item === 'string' && item.includes('/js/services/txmap.js') && is_home()) {
+        el += render_home_txmap_loader();
+      } else if (typeof item === 'string' && (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) && is_home()) {
+        continue;
+      } else {
+        el += item;
+      }
     }
   }
   for (let item of (theme.inject?.head || [])) {
     if (shouldIncludeHeadInject(item)) {
-      el += item;
+      if (typeof item === 'string' && item.includes('https://gw.alipayobjects.com/os/k/jinkai/style.css') && is_home()) {
+        el += render_async_stylesheet('https://gw.alipayobjects.com/os/k/jinkai/style.css');
+      } else if (typeof item === 'string' && item.includes('/js/services/txmap.js') && is_home()) {
+        el += render_home_txmap_loader();
+      } else if (typeof item === 'string' && (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) && is_home()) {
+        continue;
+      } else {
+        el += item;
+      }
     }
   }
   for (let item of (page.inject?.head || [])) {
     if (shouldIncludeHeadInject(item)) {
-      el += item;
+      if (typeof item === 'string' && item.includes('https://gw.alipayobjects.com/os/k/jinkai/style.css') && is_home()) {
+        el += render_async_stylesheet('https://gw.alipayobjects.com/os/k/jinkai/style.css');
+      } else if (typeof item === 'string' && item.includes('/js/services/txmap.js') && is_home()) {
+        el += render_home_txmap_loader();
+      } else if (typeof item === 'string' && (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) && is_home()) {
+        continue;
+      } else {
+        el += item;
+      }
     }
   }
   return el;

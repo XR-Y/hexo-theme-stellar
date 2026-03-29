@@ -13,6 +13,14 @@ function div_default() {
   var el = '';
   var cover_url = null;
   var category_meta = '';
+  var excerpt_limit = Math.max(48, theme.article.auto_excerpt || 84);
+
+  function compact_excerpt(raw) {
+    if (!raw) return '';
+    var text = strip_html(raw).replace(/\s+/g, ' ').trim();
+    if (!text.length) return '';
+    return truncate(text, { length: excerpt_limit });
+  }
 
   // 封面
   if (obj.image || theme.article.auto_cover) {
@@ -78,11 +86,11 @@ function div_default() {
   el += '">';
   el += '<p>';
   if (post.excerpt) {
-    el += strip_html(post.excerpt);
+    el += compact_excerpt(post.excerpt);
   } else if (post.description) {
-    el += post.description;
+    el += compact_excerpt(post.description);
   } else if (post.content && theme.article.auto_excerpt > 0) {
-    el += truncate(strip_html(post.content), {length: theme.article.auto_excerpt});
+    el += compact_excerpt(post.content);
   }
   el += '</p>';
   el += '</div>';
