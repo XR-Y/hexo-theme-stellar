@@ -35,6 +35,44 @@ function articleClass() {
   return str
 }
 
+function autoVoteId() {
+  const source = page.vote_id || page.path || page.slug || page.title || 'default'
+  return 'post-vote-' + String(source)
+    .toLowerCase()
+    .replace(/\\/g, '/')
+    .replace(/[^a-z0-9/_-]+/g, '-')
+    .replace(/\//g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function renderAutoVote() {
+  if (layout !== 'post') {
+    return ''
+  }
+  if (page.vote === false) {
+    return ''
+  }
+  if (page.content?.includes('tag-plugin ds-vote')) {
+    return ''
+  }
+  const api = theme.data_services?.vote?.api
+  if (!api) {
+    return ''
+  }
+  const id = autoVoteId()
+  const title = page.vote_title || '本文有帮助吗？'
+  let el = `<div class="tag-plugin ds-vote" data-api="${api}" data-id="${id}">`
+  if (title?.length > 0) {
+    el += `<div class="header"><span>${title}</span></div>`
+  }
+  el += `<div class="body">`
+  el += `<button class="vote-up">${icon('vote:thumbsup')} <span class="up">0</span></button>`
+  el += `<button class="vote-down">${icon('vote:thumbsdown')} <span class="down">0</span></button>`
+  el += `</div></div>`
+  return el
+}
+
 function layoutDiv() {
   var el = ''
   if (page.nav_tabs) {
@@ -51,6 +89,7 @@ function layoutDiv() {
   if (page.content && page.content.length > 0) {
     el += page.content
   }
+  el += renderAutoVote()
   if (notebook) {
     el += partial('_partial/main/notebook/note_tags', { notebook: notebook })
   }
