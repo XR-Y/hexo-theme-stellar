@@ -89,13 +89,27 @@ function render_home_txmap_loader() {
   function custom_inject() {
   const articleLayouts = ['post', 'page', 'wiki', 'note'];
   const isArticleLike = articleLayouts.includes(page.layout);
-  const isListLike = is_home() || is_category() || is_tag() || is_archive() || ['index_topic', 'notebooks', 'notes', '404'].includes(page.layout);
+  const currentPath = page.path || '';
+  const isTaxonomyPath = currentPath.startsWith('archives/')
+    || currentPath === 'archives/'
+    || currentPath.startsWith('tags/')
+    || currentPath === 'tags/'
+    || currentPath.startsWith('categories/')
+    || currentPath === 'categories/';
+  const isListLike = is_home() || is_category() || is_tag() || is_archive() || isTaxonomyPath || ['index_topic', 'notebooks', 'notes', '404', 'tags', 'categories'].includes(page.layout);
 
   function shouldIncludeHeadInject(item) {
     if (typeof item !== 'string') {
       return true;
     }
-    const usesPoemWidget = is_home() || page.layout === 'post';
+    const usesPoemWidget = is_home()
+      || page.layout === 'post'
+      || page.layout === 'tags'
+      || page.layout === 'categories'
+      || is_category()
+      || is_tag()
+      || is_archive()
+      || isTaxonomyPath;
     if (item.includes('/css/callouts_blocks.css') || item.includes('/css/table_dataview.css')) {
       return !isListLike;
     }
