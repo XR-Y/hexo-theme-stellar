@@ -1,18 +1,16 @@
 <%
 function layoutDiv() {
-  // 作者
   var el = ''
+  const displayDate = get_post_display_date(page) || page.date || page.updated
   el += `<div class="flex-row" id="post-meta">`
   if (page.wiki) {
     el += `<span class="text created">${__("meta.updated") + __("symbol.colon")}`
     el += `<time datetime="${date_xml(page.updated)}">${date(page.updated, config.date_format)}</time>`
     el += `</span>`
   } else if (page.notebook) {
-    // 更新日期
     el += `<span class="text created">${__("meta.updated") + __("symbol.colon")}`
     el += `<time datetime="${date_xml(page.updated)}">${date(page.updated, config.date_format)}</time>`
     el += `</span>`
-    // 发布日期
     el += `<span class="sep updated"></span>`
     el += `<span class="text updated">`
     el += `${__("meta.created") + __("symbol.colon")}`
@@ -24,18 +22,11 @@ function layoutDiv() {
       el += `<a class="author" href="${pretty_url(author.path)}">${author.name}</a>`
       el += `<span class="sep"></span>`
     }
-    // 发布日期
     el += `<span class="text created">`
     if (!author) {
       el += `${__("meta.created") + __("symbol.colon")}`
     }
-    el += `<time datetime="${date_xml(page.date)}">${date(page.date, config.date_format)}</time>`
-    el += `</span>`
-    // 更新日期
-    el += `<span class="sep updated"></span>`
-    el += `<span class="text updated">`
-    el += `${__("meta.updated") + __("symbol.colon")}`
-    el += `<time datetime="${date_xml(page.updated)}">${date(page.updated, config.date_format)}</time>`
+    el += `<time datetime="${date_xml(displayDate)}">${date(displayDate, config.date_format)}</time>`
     el += `</span>`
   }
   el += `</div>`

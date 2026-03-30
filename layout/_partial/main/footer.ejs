@@ -2,6 +2,7 @@
 const content = theme.footer.content?.replace('{author.name}', (config.author || 'Anonymity'))?.replace('{theme.name}', stellar_info('name'))?.replace('{theme.version}', stellar_info('version'))?.replace('{theme.tree}', stellar_info('tree'))
 function layoutDiv() {
   var el = ''
+  const postDisplayDate = page?.layout === 'post' ? (get_post_display_date(page) || page.date || page.updated) : null
   el += `<footer class="page-footer${scrollreveal(' ')} footnote">`
   el += '<hr>'
   // sitemap
@@ -87,8 +88,8 @@ const extractNum = str => parseInt(str.match(/\d+/)[0], 10);
   wowBook = wowBook ? `写完一本 ${wowBook.title} 了！` : "";
   let gtime_days = Math.floor((new Date() - new Date('2023.04.17 13:19:52')) / 1000 / 60 / 60 / 24);
 
-  if (page.updated) {
-    el += '<script>upgrade_time_days = Math.floor((new Date() - new Date(' + page.updated + ')) / 1000 / 60 / 60 / 24);</script>'
+  if (postDisplayDate) {
+    el += '<script>upgrade_time_days = Math.floor((new Date() - new Date(' + JSON.stringify(postDisplayDate) + ')) / 1000 / 60 / 60 / 24);</script>'
   } else {
     el += '<script>upgrade_time_days = 0;</script>'
   }
@@ -101,3 +102,4 @@ const extractNum = str => parseInt(str.match(/\d+/)[0], 10);
 }
 %>
 <%- layoutDiv() %>
+

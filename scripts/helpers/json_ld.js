@@ -6,6 +6,15 @@
 'use strict';
 
 const util = require('hexo-util');
+
+function toIso(value) {
+  if (!value) return null;
+  if (typeof value.format === 'function') {
+    return value.format();
+  }
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
   
 hexo.extend.helper.register('json_ld', function(args) {
   const page = this.page;
@@ -14,13 +23,13 @@ hexo.extend.helper.register('json_ld', function(args) {
   const authorEmail = config.email;
   const authorImage = config.avatar || (authorEmail ? this.gravatar(authorEmail) : null);
   const isPage = page.layout == 'page';
+  const displayDate = this.get_post_display_date?.(page) || page.date || page.updated;
 
   const author = {
     '@type': 'Person',
     name: config.author,
     sameAs: structured_data.sameAs || []
   };
-  // Google does not accept `Person` as item type for the publisher property
   const publisher = Object.assign({}, author, {'@type': 'Organization'});
   let schema = {};
 
@@ -38,10 +47,9 @@ hexo.extend.helper.register('json_ld', function(args) {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
       author: author,
-      // articleBody: this.strip_html(page.content),
-      dateCreated: page.date.format(),
-      dateModified: page.updated.format(),
-      datePublished: page.date.format(),
+      dateCreated: toIso(displayDate),
+      dateModified: toIso(displayDate),
+      datePublished: toIso(displayDate),
       description: this.strip_html(page.excerpt),
       headline: page.title,
       mainEntityOfPage: {
@@ -69,9 +77,7 @@ hexo.extend.helper.register('json_ld', function(args) {
 
     schema.thumbnailUrl = page.cover || page.banner;
     schema.image = images;
-  
   } else if (isPage || this.is_home()) {
-    
     const url = this.is_home() ? config.url : this.pretty_url(page.permalink);
     schema = {
       '@context': 'https://schema.org',
@@ -91,18 +97,13 @@ hexo.extend.helper.register('json_ld', function(args) {
       }
     }
     if (!this.is_home()) {
-
       if (page.excerpt || page.description) {
         schema.description = this.strip_html(page.description || page.excerpt);
       } else {
         schema.description = util.truncate(this.strip_html(page.content), {length: 200});
       }
-
     }
-    
   } else {
-    
-    // default to WebPage for other layouts
     schema = {
       '@context': 'https://schema.org',
       '@type': 'Website',
@@ -112,7 +113,6 @@ hexo.extend.helper.register('json_ld', function(args) {
       description: config.description,
       url: config.url
     };
-    
   }
 
   return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
