@@ -56,7 +56,8 @@ const util = {
   },
 
   scrollComment: () => {
-    document.getElementById('comments').scrollIntoView({behavior: "smooth"});
+    const target = document.querySelector('#twikoo_container, #artalk_container, #comments #giscus, #comments #beaudar, #comments #utterances, #comments');
+    target?.scrollIntoView({behavior: "smooth"});
   },
 
   viewportLazyload: (target, func, enabled = true) => {
@@ -255,6 +256,51 @@ const init = {
     }
     showTip(canonical.officialHosts?.includes(currentHost));
   }
+  ,
+  twikooExpandIcons: () => {
+    let observer = null;
+    const applyIcons = (root = document) => {
+      root.querySelectorAll('.twikoo .tk-expand').forEach((button) => {
+        const currentLabel = (button.textContent || '').trim() || button.dataset.expandLabel || '';
+        if (currentLabel) {
+          button.dataset.expandLabel = currentLabel;
+        }
+        const label = button.dataset.expandLabel || '';
+        if (!label) {
+          return;
+        }
+        const collapse = /收起|折叠|collapse/i.test(label);
+        button.dataset.expandState = collapse ? 'collapse' : 'expand';
+        button.setAttribute('aria-label', label || (collapse ? '收起' : '展开'));
+        button.setAttribute('title', label || (collapse ? '收起' : '展开'));
+        button.dataset.expandReady = 'true';
+      });
+    };
+
+    const mount = document.getElementById('comments');
+    if (!mount || mount.dataset.twikooExpandObserver === 'true') {
+      return;
+    }
+    mount.dataset.twikooExpandObserver = 'true';
+    const syncIcons = () => {
+      if (observer) {
+        observer.disconnect();
+      }
+      applyIcons(mount);
+      if (observer) {
+        observer.observe(mount, { childList: true, subtree: true, characterData: true });
+      }
+    };
+    observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+          syncIcons();
+          break;
+        }
+      }
+    });
+    syncIcons();
+  }
 
 }
 
@@ -265,3 +311,5 @@ init.sidebar()
 init.relativeDate(document.querySelectorAll('#post-meta time'))
 init.registerTabsTag()
 init.canonicalCheck()
+init.twikooExpandIcons()
+

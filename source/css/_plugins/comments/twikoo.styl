@@ -72,6 +72,12 @@
   .el-input-group__append, .el-input-group__prepend,
   .el-input__inner, .el-textarea__inner,
   .tk-preview-container
+    background: var(--card)
+    border: 1px solid var(--block-border)
+    box-shadow: none
+  .el-input-group__append, .el-input-group__prepend,
+  .el-input__inner, .el-textarea__inner,
+  .tk-preview-container
     border-color: var(--block-border)
   .el-input__inner:focus,
   .el-textarea__inner:focus
@@ -96,9 +102,6 @@
     color: var(--twikoo-theme)
     border-color: var(--twikoo-theme)
 
-  .el-button--primary
-    background-color: var(--twikoo-theme)
-    border-color: var(--twikoo-theme) !important
   .el-button--primary:focus,.el-button--primary:hover
     background: var(--accent)
     border-color: var(--accent) !important
@@ -153,7 +156,7 @@
     border: none
     padding: 6px 2rem
     border-radius: $border-card
-    background: var(--block)
+    background: var(--card)
     color: var(--text-p1)
     line-height: 2
     font-size: 14px
@@ -161,35 +164,55 @@
     trans1 background
 
     &:hover
-      background: var(--card)
+      background: var(--block)
 
   .tk-comment
     margin-top: 0
     margin-bottom: 1rem
-    border: 1px dashed var(--block-border)
+    border: 1px solid var(--block-border)
     padding: 1rem
     border-radius: $border-card
-    background: var(--block)
+    background: var(--card)
+    box-shadow: none
+    trans1 all
 
     &:hover
       border-color: var(--twikoo-theme)
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08)
 
   .tk-main .tk-comment
     margin-top: 1rem
     margin-bottom: 0
 
   .tk-submit
-    padding: 1rem 1rem 0 1rem
+    padding: 0
     border-radius: $border-card
-    background: var(--block)
+    background: transparent
+
+  .tk-row
+    .tk-col
+      .el-input__inner
+        border-radius: $border-card
+
+  .el-textarea__inner
+    border-radius: $border-card
+    min-height: 140px
+
+  .tk-preview-container
+    border-radius: $border-card
+    background: var(--card)
+
+  .tk-replies .tk-comment
+    background: transparent
+
+  .tk-avatar-img
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08)
 
   .tk-tag
     vertical-align: 0.1em
 
   .tk-tag-green
     border: none
-    background-color: var(--link-a20)
-    color: var(--twikoo-theme)
     
   .tk-comments-title .tk-comments-count
     margin-top: 15px
@@ -204,3 +227,32 @@
 
   .tk-comments-no
     color: var(--text-p1)
+
+  // Normalize to a quieter, page-integrated comment surface.
+  .tk-submit
+    padding: 0 !important
+    background: transparent !important
+    border: none !important
+    box-shadow: none !important
+
+  .el-input-group__append, .el-input-group__prepend,
+  .el-input__inner, .el-textarea__inner,
+  .tk-preview-container
+    background: transparent !important
+    border: 1px solid var(--block-border) !important
+    box-shadow: none !important
+
+  .tk-comment
+    background: transparent !important
+    border: 1px solid var(--block-border) !important
+    box-shadow: none !important
+
+    &:hover
+      background: rgba(148, 163, 184, 0.08) !important
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05) !important
+
+  .tk-replies .tk-comment
+    background: transparent !important
+
+  .tk-expand
+    background: rgba(148, 163, 184, 0.1) !important

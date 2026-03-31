@@ -37,11 +37,8 @@ function layoutToc(fallback) {
 
 function layoutDiv(fallback) {
   const tocBody = layoutTocBody()
-  if (tocBody.trim().length == 0) {
-    return ''
-  }
   var el = ''
-  el += `<widget class="widget-wrapper${scrollreveal(' ')} toc" id="data-toc" collapse="${item.collapse}">`
+  el += `<widget class="widget-wrapper${scrollreveal(' ')} toc${tocBody.length > 0 ? '' : ' toc-actions-only'}" id="data-toc" collapse="${item.collapse}">`
   if (tocBody.length > 0) {
     el += layoutTocHeader()
     el += `<div class="widget-body">`
@@ -69,3 +66,4 @@ function layoutDiv(fallback) {
 %>
 
 <%- layoutDiv() %>
+

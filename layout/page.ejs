@@ -32,6 +32,9 @@ function articleClass() {
   if (isUsingHeti) {
     str += ' heti'
   }
+  if (layout === 'post' && (page.content || '').length > 80000) {
+    str += ' content-long'
+  }
   return str
 }
 
@@ -109,3 +112,6 @@ function layoutDiv() {
 %>
 
 <%- layoutDiv() %>
+
+
+
