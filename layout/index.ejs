@@ -20,10 +20,12 @@ function layout_post_card(layout, post, content) {
 
 function layout_post_list(partial) {
   var el = '';
+  var coverIndex = 0;
   el += '<div class="post-list post">';
-  page.posts.each(function(post){
+  page.posts.each(function(post, i){
     if (post.indexing != false) {
-      el += layout_post_card('post', post, partial(post));
+      var currentCoverIndex = post.cover ? coverIndex++ : null;
+      el += layout_post_card('post', post, partial(post, i, currentCoverIndex));
     }
   })
   el += '</div>';
@@ -33,7 +35,7 @@ function layout_post_list(partial) {
 %>
 
 <%- partial('_partial/main/navbar/nav_tabs_blog') %>
-<%- layout_post_list(function(post){
-  return partial('_partial/main/post_list/post_card', {post: post})
+<%- layout_post_list(function(post, i, coverIndex){
+  return partial('_partial/main/post_list/post_card', {post: post, list_index: i, cover_list_index: coverIndex})
 }) %>
 <%- partial('_partial/main/post_list/paginator') %>

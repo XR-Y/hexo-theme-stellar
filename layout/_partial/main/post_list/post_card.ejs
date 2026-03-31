@@ -1,5 +1,7 @@
 <%
 const poster = post.poster;
+const listIndex = typeof list_index === 'number' ? list_index : Number.MAX_SAFE_INTEGER;
+const coverListIndex = typeof cover_list_index === 'number' ? cover_list_index : Number.MAX_SAFE_INTEGER;
 var obj = {
   image: post.cover
 };
@@ -14,6 +16,41 @@ function div_default() {
   var cover_url = null;
   var category_meta = '';
   var excerpt_limit = Math.max(48, theme.article.auto_excerpt || 84);
+  var cover_attrs = '';
+
+  function can_resize_cover(url) {
+    return /^https?:\/\/(?:b2\.xryuu\.com|s2\.loli\.net)\//i.test(url || '');
+  }
+
+  function wsrv_url(url, width) {
+    var normalized = (url || '').replace(/^https?:\/\//i, '');
+    return 'https://wsrv.nl/?url=' + encodeURIComponent(normalized) + '&w=' + width + '&fit=cover&output=webp&q=82';
+  }
+
+  function build_cover_attrs(url, title) {
+    var attrs = [];
+    var loading = coverListIndex < 2 ? 'eager' : 'lazy';
+    var fetchpriority = coverListIndex === 0 ? 'high' : 'auto';
+
+    attrs.push('alt="' + (title || 'post cover') + '"');
+    attrs.push('width="448"');
+    attrs.push('height="252"');
+    attrs.push('decoding="async"');
+    attrs.push('loading="' + loading + '"');
+    attrs.push('fetchpriority="' + fetchpriority + '"');
+    attrs.push('sizes="(max-width: 768px) min(100vw - 4rem, 420px), 224px"');
+    attrs.push('referrerpolicy="no-referrer"');
+
+    if (can_resize_cover(url)) {
+      attrs.push('src="' + wsrv_url(url, 448) + '"');
+      attrs.push('srcset="' + wsrv_url(url, 448) + ' 448w, ' + wsrv_url(url, 672) + ' 672w, ' + wsrv_url(url, 896) + ' 896w"');
+      attrs.push('data-origin-src="' + url + '"');
+    } else {
+      attrs.push('src="' + url + '"');
+    }
+
+    return attrs.join(' ');
+  }
 
   function compact_excerpt(raw) {
     if (!raw) return '';
@@ -64,8 +101,9 @@ function div_default() {
   el += '<article class="md-text' + (cover_url ? ' with-cover' : '') + '">';
 
   if (cover_url) {
+    cover_attrs = build_cover_attrs(cover_url, post.title);
     el += '<div class="post-cover compact">';
-    el += '<img src="' + cover_url + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" alt="' + (post.title || 'post cover') + '"/>';
+    el += '<img ' + cover_attrs + '/>';
     el += '</div>';
   }
 

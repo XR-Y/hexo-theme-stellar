@@ -121,6 +121,9 @@ function render_ai_summary_bootstrap() {
     if (item.includes('/css/callouts_blocks.css') || item.includes('/css/table_dataview.css')) {
       return !isListLike;
     }
+    if (item.includes('cdn.jsdmirror.com/npm/katex') || item.includes('cdn.jsdelivr.net/npm/katex') || item.includes('unpkg.com/katex')) {
+      return !isListLike;
+    }
     if (item.includes('/js/services/txmap.js')) {
       return is_home();
     }

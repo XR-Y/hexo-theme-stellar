@@ -1,6 +1,16 @@
 <%
 function loadPlugins() {
   var el = ''
+  const articleLayouts = ['post', 'page', 'wiki', 'note'];
+  const isArticleLike = articleLayouts.includes(page.layout);
+  const currentPath = page.path || '';
+  const isTaxonomyPath = currentPath.startsWith('archives/')
+    || currentPath === 'archives/'
+    || currentPath.startsWith('tags/')
+    || currentPath === 'tags/'
+    || currentPath.startsWith('categories/')
+    || currentPath === 'categories/';
+  const isListLike = is_home() || is_category() || is_tag() || is_archive() || isTaxonomyPath || ['index_topic', 'notebooks', 'notes', '404', 'tags', 'categories'].includes(page.layout);
 
   // search
   if (theme.search[theme.search.service]) {
@@ -10,6 +20,9 @@ function loadPlugins() {
   // others
   for (let id of Object.keys(theme.plugins)) {
     const conf = Object.assign({}, theme.plugins[id], page[id])
+    if (id === 'katex' && isListLike && !isArticleLike) {
+      continue
+    }
     if (page[id] == true || conf.enable) {
       if (conf.inject?.length > 0) {
         el += conf.inject

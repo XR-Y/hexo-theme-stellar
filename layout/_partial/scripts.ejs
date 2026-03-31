@@ -1,15 +1,38 @@
 <%
 
 function custom_inject() {
+  const currentPath = page.path || '';
+  const isTaxonomyPath = currentPath.startsWith('archives/')
+    || currentPath === 'archives/'
+    || currentPath.startsWith('tags/')
+    || currentPath === 'tags/'
+    || currentPath.startsWith('categories/')
+    || currentPath === 'categories/';
+  const isListLike = is_home() || is_category() || is_tag() || is_archive() || isTaxonomyPath || ['index_topic', 'notebooks', 'notes', '404', 'tags', 'categories'].includes(page.layout);
+  function shouldIncludeScriptInject(item) {
+    if (typeof item !== 'string') {
+      return true;
+    }
+    if (item.includes('cdn.jsdmirror.com/npm/katex') || item.includes('cdn.jsdelivr.net/npm/katex') || item.includes('unpkg.com/katex')) {
+      return !isListLike;
+    }
+    return true;
+  }
   var el = '';
   for (let item of (config.inject?.script || [])) {
-    el += item;
+    if (shouldIncludeScriptInject(item)) {
+      el += item;
+    }
   }
   for (let item of (theme.inject?.script || [])) {
-    el += item;
+    if (shouldIncludeScriptInject(item)) {
+      el += item;
+    }
   }
   for (let item of (page.inject?.script || [])) {
-    el += item;
+    if (shouldIncludeScriptInject(item)) {
+      el += item;
+    }
   }
   return el;
 }
