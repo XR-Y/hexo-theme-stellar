@@ -72,16 +72,20 @@ function layoutDiv() {
     if (author) {
       license = license.replace('{author.name}', author.name).replace('{author.url}', author.url)
     }
-    el += `
+    license = `
     <section id="license">
       <div class="header"><span>${__('meta.license')}</span></div>
       <div class="body">${markdown(license)}</div>
     </section>
     `
+  } else {
+    license = ''
   }
 
   if (contributors) {
-    el += contributors
+    contributors = contributors
+  } else {
+    contributors = ''
   }
 
   var showSharePlugin = false
@@ -97,6 +101,7 @@ function layoutDiv() {
   } else if (page.share) {
     showSharePlugin = true
   }
+  var share = ''
   if (theme.article.share && showSharePlugin) {
     function socialButtons() {
       var el = ''
@@ -122,7 +127,7 @@ function layoutDiv() {
             el += ' href="mailto:?subject=' + page.title + ' - ' + config.title + '&amp;'
             el += 'body=' + page.permalink + '"';
           } else if (item == 'link') {
-            el += ' onclick="util.copy(&quot;copy-link&quot;, &quot;' + __('message.copied') + '&quot;)"';
+            el += ' onclick="util.copy(&quot;copy-link&quot;)"';
           }
           el += '>';
           el += icon(`share:${item}`)
@@ -142,9 +147,8 @@ function layoutDiv() {
         return ''
       }
     }
-    el += `
+    share = `
     <section id="share">
-      <div class="header"><span>${__('meta.share')}</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="${page.permalink}" /></div>
         <div class="social-wrap dis-select">${socialButtons()}</div>
@@ -152,6 +156,19 @@ function layoutDiv() {
       </div>
     </section>
     `
+  }
+
+  if (license.length > 0 || share.length > 0) {
+    el += `
+    <div class="post-endnote">
+      ${license}
+      ${share}
+    </div>
+    `
+  }
+
+  if (contributors) {
+    el += contributors
   }
 
   el += '</div>';

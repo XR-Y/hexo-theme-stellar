@@ -24,42 +24,66 @@ function layoutBreadcrumb() {
     return `<div class="top"></div>`
   }
   var el = ''
-  // 1.main
   el += `<div class="top bread-nav footnote">`
-  // 2.left
-  el += `<div class="left">`
-  // 3.left.top: 面包屑导航
   el += `<div class="flex-row" id="breadcrumb">`
-    // 首页
-    el += `<a class="cap breadcrumb" href="${pretty_url(config.root)}">${__("btn.home")}</a>`
-    if (theme.wiki.tree[page.wiki]) {
-      el += partial('breadcrumb/wiki')
-    } else if (page.notebook) {
-      el += partial('breadcrumb/note')
-    } else if (page.layout == 'post') {
-      el += partial('breadcrumb/blog')
-    } else {
-      el += partial('breadcrumb/page')
-    }
-  // end 3.left.top
-  el += `</div>`
-  if (page.layout == "post" && page.tags && page.tags.length > 0) {
-    el += '<div id="tag">'; // 将标签容器的创建移动到条件内部
-    el += ' <span>&nbsp标签：</span>';
-    el += list_categories(page.tags, {
-      class: "cap breadcrumb",
-      show_count: false,
-      separator: '&nbsp;/',
-      style: "none"
-    });
-    el += '&nbsp</div>';
+  el += `<a class="cap breadcrumb" href="${pretty_url(config.root)}">${__("btn.home")}</a>`
+  if (theme.wiki.tree[page.wiki]) {
+    el += partial('breadcrumb/wiki')
+  } else if (page.notebook) {
+    el += partial('breadcrumb/note')
+  } else if (page.layout == 'post') {
+    el += partial('breadcrumb/blog')
+  } else {
+    el += partial('breadcrumb/page')
   }
-  el += '<div class="flex-row" id="page-words"><span style="padding: 4px;">本文：' + wordcount(page.content) + '字</span><span class="sep updated" style="padding: 4px;"></span><span class="text updated" style="padding: 4px;">阅读时长：' + min2read(page.content) + '分</span></div>';
-  // 3.left.bottom
-  el += partial('dateinfo')
-  // end 2.left
   el += `</div>`
-  // end 1.main
+  el += `</div>`
+  return el
+}
+
+function layoutTagLine() {
+  if (!(page.layout == 'post' && page.tags && page.tags.length > 0)) {
+    return ``
+  }
+  let el = `<div class="flex-row" id="tag">`
+  el += list_categories(page.tags, {
+    class: "cap breadcrumb",
+    show_count: false,
+    separator: '',
+    style: "none"
+  });
+  el += `</div>`
+  return el
+}
+
+function layoutReadingInfo() {
+  if (page.layout !== 'post') {
+    return ``
+  }
+  const displayDate = get_post_display_date(page) || page.date || page.updated
+  let el = `<div class="flex-row" id="page-words">`
+  el += `<span class="publish-date">${date(displayDate, config.date_format)}</span>`
+  el += `<span class="sep reading"></span>`
+  el += `<span class="wordcount">${wordcount(page.content)} 字</span>`
+  el += `<span class="sep reading"></span>`
+  el += `<span class="min2read">${min2read(page.content)} 分钟阅读</span>`
+  el += `</div>`
+  return el
+}
+
+function layoutPostMeta() {
+  const readingInfo = layoutReadingInfo()
+  const tagLine = layoutTagLine()
+  if (readingInfo.length == 0 && tagLine.length == 0) {
+    return ``
+  }
+  let el = `<div class="post-intro-meta">`
+  if (readingInfo.length > 0 || tagLine.length > 0) {
+    el += `<div class="meta-secondary">`
+    el += readingInfo
+    el += tagLine
+    el += `</div>`
+  }
   el += `</div>`
   return el
 }
@@ -92,6 +116,7 @@ function layoutBottom() {
   const el_icon = layoutIcon()
   const el_title = layoutTitle()
   const el_subtitle = layoutSubtitle()
+  const el_meta = layoutPostMeta()
   var cls = ''
   if (el_title.length > 0 && el_subtitle.length == 0) {
     cls += ' only-title'
@@ -103,6 +128,7 @@ function layoutBottom() {
       <div class="text-area">
         ${el_title}
         ${el_subtitle}
+        ${el_meta}
       </div>
     </div>
     `

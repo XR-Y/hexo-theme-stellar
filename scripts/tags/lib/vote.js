@@ -20,8 +20,8 @@ module.exports = ctx => function (args) {
     el += `<div class="header"><span>${args.title}</span></div>`
   }
   el += `<div class="body">`
-  el += `<button class="vote-up">${ctx.utils.icon(args.yes || 'vote:thumbsup')} <span class="up">0</span></button>`
-  el += `<button class="vote-down">${ctx.utils.icon(args.no || 'vote:thumbsdown')} <span class="down">0</span></button>`
+  el += `<button class="vote-up">${ctx.utils.icon(args.yes || 'vote:thumbsup')} <span class="up">--</span></button>`
+  el += `<button class="vote-down">${ctx.utils.icon(args.no || 'vote:thumbsdown')} <span class="down">--</span></button>`
   el += `</div>`
   el += `</div>`
   return el.trim()

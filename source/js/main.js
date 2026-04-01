@@ -36,6 +36,9 @@ const util = {
   copy: (id, msg) => {
     const el = document.getElementById(id);
     if (el) {
+      if (msg && msg.length > 0) {
+        window.__stellarSkipNextCopyToast = true;
+      }
       el.select();
       document.execCommand("Copy");
       if (msg && msg.length > 0) {

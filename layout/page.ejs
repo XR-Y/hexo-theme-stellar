@@ -35,6 +35,9 @@ function articleClass() {
   if (layout === 'post' && (page.content || '').length > 80000) {
     str += ' content-long'
   }
+  if (page.layout_mode === 'grid') {
+    str += ' layout-mode-grid'
+  }
   return str
 }
 
@@ -70,8 +73,8 @@ function renderAutoVote() {
     el += `<div class="header"><span>${title}</span></div>`
   }
   el += `<div class="body">`
-  el += `<button class="vote-up">${icon('vote:thumbsup')} <span class="up">0</span></button>`
-  el += `<button class="vote-down">${icon('vote:thumbsdown')} <span class="down">0</span></button>`
+  el += `<button class="vote-up">${icon('vote:thumbsup')} <span class="up">--</span></button>`
+  el += `<button class="vote-down">${icon('vote:thumbsdown')} <span class="down">--</span></button>`
   el += `</div></div>`
   return el
 }
@@ -107,6 +110,9 @@ function layoutDiv() {
     el += partial('_partial/main/article/related_posts')
   }
   el += partial('_partial/comments/layout')
+  if (page.layout_mode === 'grid') {
+    el += `<script defer src="/js/services/article-grid.js"></script>`
+  }
   return el
 }
 %>

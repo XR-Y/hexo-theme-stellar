@@ -18,6 +18,11 @@ function removeVote(id) {
   localStorage.removeItem(getVoteKey(id));
 }
 
+function parseVoteCount(value) {
+  const num = parseInt(value, 10);
+  return Number.isFinite(num) ? num : 0;
+}
+
 function markVoted(el, value) {
   el.classList.add('voted');
   if (value === 'up') {
@@ -52,6 +57,7 @@ async function loadVote(el) {
   if (!id || !api) return;
 
   try {
+    el.classList.add('is-loading');
     const res = await fetch(`${api}/info?id=${encodeURIComponent(id)}`);
     const data = await res.json();
 
@@ -59,6 +65,8 @@ async function loadVote(el) {
     el.querySelector('.down').textContent = data.votes?.down ?? 0;
   } catch (e) {
     console.warn(`[vote] 加载失败: id=${id}`, e);
+  } finally {
+    el.classList.remove('is-loading');
   }
 }
 
@@ -71,8 +79,8 @@ function submitVote(el, value) {
   const downEl = el.querySelector('.down');
 
   // 乐观更新
-  if (value === 'up' && upEl) upEl.textContent = parseInt(upEl.textContent || '0') + 1;
-  if (value === 'down' && downEl) downEl.textContent = parseInt(downEl.textContent || '0') + 1;
+  if (value === 'up' && upEl) upEl.textContent = parseVoteCount(upEl.textContent) + 1;
+  if (value === 'down' && downEl) downEl.textContent = parseVoteCount(downEl.textContent) + 1;
 
   storeVote(id, value);
   markVoted(el, value);
@@ -106,8 +114,8 @@ function initVotes() {
   });
 }
 
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', initVotes);
-} else {
+if (document.body) {
   initVotes();
+} else {
+  window.addEventListener('DOMContentLoaded', initVotes, { once: true });
 }
