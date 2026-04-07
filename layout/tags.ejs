@@ -7,13 +7,94 @@ if (page.menu_id == undefined) {
 <% if (site.tags.length) { %>
   <% page.title = __('btn.tags'); %>
   <% page.layout = 'tags'; %>
+  <%
+    const tagEntries = [];
+    site.tags.sort('length', -1).each(function(tag) {
+      const latest = tag.posts.sort('date', -1).data[0];
+      const featured = tag.posts.data
+        .slice()
+        .sort((a, b) => new Date(b.updated || b.date) - new Date(a.updated || a.date))
+        .slice(0, 2);
+      tagEntries.push({
+        name: tag.name,
+        path: pretty_url(tag.path),
+        count: tag.posts.length,
+        latest: latest,
+        featured: featured
+      });
+    });
+
+    const sections = [
+      {
+        key: 'core',
+        title: '长期主题',
+        items: tagEntries.filter(item => item.count >= 5)
+      },
+      {
+        key: 'steady',
+        title: '持续关注',
+        items: tagEntries.filter(item => item.count >= 2 && item.count <= 4)
+      },
+      {
+        key: 'spark',
+        title: '偶尔提及',
+        items: tagEntries.filter(item => item.count === 1)
+      }
+    ];
+  %>
   <%- partial('_partial/main/navbar/nav_tabs_blog') %>
   <div class='post-list'>
-    <article class='<%- scrollreveal("") %>' id='tags'>
-      <% site.tags.sort('length', -1).each(function(tag){ %>
-        <a class='tag' href="<%= pretty_url(tag.path) %>">
-          <span class='name'><%= tag.name %></span>
-        </a>
+    <article class='<%- scrollreveal("") %>' id='tags-map'>
+      <% sections.forEach(function(section) { %>
+        <% if (section.items.length) { %>
+          <section class='tag-map-section tag-map-section-<%= section.key %>'>
+            <div class='section-head'>
+              <h2><%= section.title %></h2>
+            </div>
+            <div class='tag-map-grid'>
+              <% section.items.forEach(function(entry) { %>
+                <a class='tag-map-card' href='<%= entry.path %>'>
+                  <div class='card-top'>
+                    <span class='tag-name'>#<%= entry.name %></span>
+                    <% if (section.key !== 'spark') { %>
+                      <span class='tag-count'><%= entry.count %> 篇</span>
+                    <% } %>
+                  </div>
+                  <% if (section.key === 'core' && entry.featured && entry.featured.length) { %>
+                    <div class='card-body feature-body'>
+                      <p class='card-label'>最近更新</p>
+                      <div class='feature-list'>
+                        <% entry.featured.forEach(function(feature) { %>
+                          <div class='feature-item'>
+                            <p class='feature-title'><%= feature.title %></p>
+                            <p class='feature-date'><%= date(feature.updated || feature.date, 'YYYY-MM-DD') %></p>
+                          </div>
+                        <% }) %>
+                      </div>
+                    </div>
+                  <% } else if (section.key === 'spark' && entry.latest) { %>
+                    <div class='card-body'>
+                      <p class='card-label' aria-hidden='true'>&nbsp;</p>
+                      <h3><%= entry.latest.title %></h3>
+                    </div>
+                  <% } else if (entry.latest) { %>
+                    <div class='card-body'>
+                      <p class='card-label'><%= section.key === 'spark' ? '相关内容' : '最近一篇' %></p>
+                      <h3><%= entry.latest.title %></h3>
+                      <% if (section.key !== 'spark') { %>
+                        <p class='card-date'><%= date(entry.latest.date, 'YYYY-MM-DD') %></p>
+                      <% } %>
+                    </div>
+                  <% } else { %>
+                    <div class='card-body'>
+                      <p class='card-label'>暂无文章</p>
+                    </div>
+                  <% } %>
+                </a>
+              <% }) %>
+            </div>
+          </section>
+        <% } %>
       <% }) %>
     </article>
   </div>
