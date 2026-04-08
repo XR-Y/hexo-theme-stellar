@@ -32,16 +32,21 @@ function layoutArchiveList() {
     }
   })
   for (let year of years) {
-    el += `<article class="${scrollreveal('')}" id="archive">`
-  	el += `<div class='archive-header h4'>${year}</div>`
-    posts.sort('date', -1).filter(function (post) {
+    const yearPosts = posts.sort('date', -1).filter(function (post) {
       post.year = date(post.date, 'YYYY')
       return post.year == year
-    }).each(function(post) {
+    })
+    el += `<article class="${scrollreveal('')} archive-year" id="archive">`
+    el += `<div class="archive-year-head">`
+  	el += `<div class='archive-header h4'>${year}</div>`
+    el += `<div class="archive-year-meta">${yearPosts.length} 篇文章</div>`
+    el += `</div>`
+    el += `<div class="archive-year-body">`
+    yearPosts.each(function(post) {
       el += `<div class="archive-list">`
-      el +=`<a class='post fs14' href="${pretty_url(post.link || post.path)}">`
+      el +=`<a class='post fs14 archive-entry' href="${pretty_url(post.link || post.path)}">`
       el += `<time>${date(post.date, 'MM-DD')}</time>`
-      el += `<span>`
+      el += `<span class="archive-title">`
       if (post.title) {
         el += post.title
       } else if (post.date) {
@@ -51,6 +56,7 @@ function layoutArchiveList() {
       el += `</a>`
       el += `</div>`
     })
+    el += `</div>`
   	el += `</article>`
   }
   el += `</div>`
