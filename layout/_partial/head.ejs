@@ -94,7 +94,7 @@ function render_ai_summary_bootstrap() {
   }
   return '';
 }
-  function custom_inject() {
+function custom_inject() {
   const articleLayouts = ['post', 'page', 'wiki', 'note'];
   const isArticleLike = articleLayouts.includes(page.layout);
   const currentPath = page.path || '';
@@ -121,6 +121,9 @@ function render_ai_summary_bootstrap() {
     if (item.includes('/css/callouts_blocks.css') || item.includes('/css/table_dataview.css')) {
       return !isListLike;
     }
+    if (item.includes('/css/article_refine.css')) {
+      return isArticleLike;
+    }
     if (item.includes('cdn.jsdmirror.com/npm/katex') || item.includes('cdn.jsdelivr.net/npm/katex') || item.includes('unpkg.com/katex')) {
       return !isListLike;
     }
@@ -142,47 +145,28 @@ function render_ai_summary_bootstrap() {
     return true;
   }
 
-  var el = '';
-  for (let item of (config.inject?.head || [])) {
-    if (shouldIncludeHeadInject(item)) {
+  function render_head_inject_list(items) {
+    let html = '';
+    for (let item of (items || [])) {
+      if (!shouldIncludeHeadInject(item)) {
+        continue;
+      }
       if (typeof item === 'string' && item.includes('/css/jinkai_vendor.css') && is_home()) {
-        el += render_async_stylesheet('/css/jinkai_vendor.css');
+        html += render_async_stylesheet('/css/jinkai_vendor.css');
       } else if (typeof item === 'string' && item.includes('/js/services/txmap.js') && is_home()) {
-        el += render_home_txmap_loader();
+        html += render_home_txmap_loader();
       } else if (typeof item === 'string' && (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) && is_home()) {
         continue;
       } else {
-        el += item;
+        html += item;
       }
     }
+    return html;
   }
-  for (let item of (theme.inject?.head || [])) {
-    if (shouldIncludeHeadInject(item)) {
-      if (typeof item === 'string' && item.includes('/css/jinkai_vendor.css') && is_home()) {
-        el += render_async_stylesheet('/css/jinkai_vendor.css');
-      } else if (typeof item === 'string' && item.includes('/js/services/txmap.js') && is_home()) {
-        el += render_home_txmap_loader();
-      } else if (typeof item === 'string' && (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) && is_home()) {
-        continue;
-      } else {
-        el += item;
-      }
-    }
-  }
-  for (let item of (page.inject?.head || [])) {
-    if (shouldIncludeHeadInject(item)) {
-      if (typeof item === 'string' && item.includes('/css/jinkai_vendor.css') && is_home()) {
-        el += render_async_stylesheet('/css/jinkai_vendor.css');
-      } else if (typeof item === 'string' && item.includes('/js/services/txmap.js') && is_home()) {
-        el += render_home_txmap_loader();
-      } else if (typeof item === 'string' && (item.includes('webapi.amap.com') || item.includes('a.amap.com') || item.includes('vdata.amap.com')) && is_home()) {
-        continue;
-      } else {
-        el += item;
-      }
-    }
-  }
-  return el;
+
+  return render_head_inject_list(config.inject?.head)
+    + render_head_inject_list(theme.inject?.head)
+    + render_head_inject_list(page.inject?.head);
 }
 
 function generate_canonical() {

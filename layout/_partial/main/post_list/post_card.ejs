@@ -14,6 +14,7 @@ if (poster) {
 function div_default() {
   var el = '';
   var cover_url = null;
+  var article_url = pretty_url(post.link || post.path);
   var category_meta = '';
   var excerpt_limit = Math.max(48, theme.article.auto_excerpt || 84);
   var cover_attrs = '';
@@ -102,11 +103,14 @@ function div_default() {
 
   if (cover_url) {
     cover_attrs = build_cover_attrs(cover_url, post.title);
+    el += '<a class="post-cover-link" href="' + cover_url + '" data-fancybox="home-covers" data-caption="' + (post.title || 'post cover') + '">';
     el += '<div class="post-cover compact">';
     el += '<img ' + cover_attrs + '/>';
     el += '</div>';
+    el += '</a>';
   }
 
+  el += '<a class="post-main-link" href="' + article_url + '">';
   if (cover_url) {
     el += '<div class="post-main">';
   }
@@ -152,11 +156,13 @@ function div_default() {
   if (cover_url) {
     el += '</div>';
   }
+  el += '</a>';
   el += '</article>';
   return el;
 }
 function div_photo() {
   var el = '';
+  var article_url = pretty_url(post.link || post.path);
   var position = '';
   if (obj.headline || obj.topic || obj.caption) {
     if (obj.topic) {
@@ -166,8 +172,11 @@ function div_photo() {
     }
   }
   el += '<div class="cover" position="' + position + '">';
+  el += '<a class="post-cover-link photo" href="' + obj.image + '" data-fancybox="home-covers" data-caption="' + (obj.caption || obj.headline || post.title || 'post cover') + '">';
   el += '<img src="' + obj.image + '" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>';
+  el += '</a>';
   if (position.length > 0) {
+    el += '<a class="cover-info-link" href="' + article_url + '">';
     el += '<div class="cover-info" position="' + position + '"';
     if (obj.color) {
       el += 'style="color:' + obj.color + '"';
@@ -183,6 +192,7 @@ function div_photo() {
       el += '<div class="text caption">' + obj.caption + '</div>';
     }
     el += '</div>';
+    el += '</a>';
 
   }
   el += '</div>';

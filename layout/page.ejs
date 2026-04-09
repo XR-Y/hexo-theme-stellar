@@ -113,6 +113,9 @@ function layoutDiv() {
   if (page.layout_mode === 'grid') {
     el += `<script defer src="/js/services/article-grid.js"></script>`
   }
+  if (page.menu_id === 'morningpost') {
+    el += `<script defer src="/js/services/morningpost-history.js"></script>`
+  }
   return el
 }
 %>

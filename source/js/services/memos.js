@@ -46,7 +46,7 @@ utils.jq(() => {
             `<div class="user-info">${default_avatar ? `<img src="${default_avatar}" alt="${item.creatorName || 'memos'} 的头像">` : ''}<span>${item.creatorName}</span></div>`,
         buildDate: item => new Date(item.createdTs * 1000),
         buildImages: (item, host) => (item.resourceList || []).filter(res => res.type?.includes('image/')).map(res =>
-            `<div class="image-bg"><img src="${res.externalLink || `https://${host}/o/r/${res.id}`}" alt="记忆碎片配图"></div>`
+            `<div class="image-bg"><img data-fancybox="memos" src="${res.externalLink || `https://${host}/o/r/${res.id}`}" alt="记忆碎片配图"></div>`
         )
       },
       "22+": {
@@ -76,7 +76,7 @@ utils.jq(() => {
         },
         buildDate: item => new Date(item.createTime),
         buildImages: (item) => (item.resources || []).filter(res => res.type?.includes('image/')).map(res =>
-            `<div class="image-bg"><img src="${res.externalLink || `https://${host}/o/r/${res.id}`}" alt="记忆碎片配图"></div>`
+            `<div class="image-bg"><img data-fancybox="memos" src="${res.externalLink || `https://${host}/o/r/${res.id}`}" alt="记忆碎片配图"></div>`
         )
       },
       "feature": {
