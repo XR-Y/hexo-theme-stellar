@@ -94,6 +94,21 @@ function render_ai_summary_bootstrap() {
   }
   return '';
 }
+
+function render_vote_preconnect() {
+  const voteApi = theme.data_services?.vote?.api;
+  const hasVoteWidget = page.content?.includes('tag-plugin ds-vote')
+    || (page.layout === 'post' && page.vote !== false && !!voteApi);
+  if (!hasVoteWidget || typeof voteApi !== 'string') {
+    return '';
+  }
+  const origin = voteApi.replace(/\/api\/.*$/, '');
+  if (!/^https?:\/\//.test(origin)) {
+    return '';
+  }
+  return `<link rel="preconnect" href="${origin}" crossorigin>`;
+}
+
 function custom_inject() {
   const articleLayouts = ['post', 'page', 'wiki', 'note'];
   const isArticleLike = articleLayouts.includes(page.layout);
@@ -203,6 +218,7 @@ function generate_canonical() {
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   <title><%- generate_title() %></title>
+  <%- render_vote_preconnect() %>
 
   <% if (theme.open_graph && theme.open_graph.enable) { %>
     <%- open_graph(og_args()) %>

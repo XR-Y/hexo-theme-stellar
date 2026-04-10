@@ -94,7 +94,6 @@ utils.jq(() => {
           memos.data = data.memos;
         } else {
           memos.version = "feature";
-          console.log("当前Memos版本过高，请到Stellar社区反馈");
         }
         return memos
       }

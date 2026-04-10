@@ -2,6 +2,43 @@ function getVoteKey(id) {
   return `vote-${id}`;
 }
 
+function getVoteCacheKey(id) {
+  return `vote-cache-${id}`;
+}
+
+function readVoteCache(id) {
+  try {
+    const raw = sessionStorage.getItem(getVoteCacheKey(id));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const ts = Number(parsed.ts || 0);
+    const ttl = 1000 * 60 * 10;
+    if (!ts || Date.now() - ts > ttl) {
+      sessionStorage.removeItem(getVoteCacheKey(id));
+      return null;
+    }
+    return {
+      up: parseVoteCount(parsed.up),
+      down: parseVoteCount(parsed.down)
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeVoteCache(id, votes) {
+  try {
+    sessionStorage.setItem(getVoteCacheKey(id), JSON.stringify({
+      up: parseVoteCount(votes?.up),
+      down: parseVoteCount(votes?.down),
+      ts: Date.now()
+    }));
+  } catch (e) {
+    // ignore storage failures
+  }
+}
+
 function hasVoted(id) {
   return !!localStorage.getItem(getVoteKey(id));
 }
@@ -21,6 +58,13 @@ function removeVote(id) {
 function parseVoteCount(value) {
   const num = parseInt(value, 10);
   return Number.isFinite(num) ? num : 0;
+}
+
+function updateVoteCounts(el, votes) {
+  const upEl = el.querySelector('.up');
+  const downEl = el.querySelector('.down');
+  if (upEl) upEl.textContent = parseVoteCount(votes?.up);
+  if (downEl) downEl.textContent = parseVoteCount(votes?.down);
 }
 
 function markVoted(el, value) {
@@ -56,13 +100,19 @@ async function loadVote(el) {
   const api = el.dataset.api;
   if (!id || !api) return;
 
+  const cachedVotes = readVoteCache(id);
+  if (cachedVotes) {
+    updateVoteCounts(el, cachedVotes);
+  }
+
   try {
-    el.classList.add('is-loading');
+    if (!cachedVotes) {
+      el.classList.add('is-loading');
+    }
     const res = await fetch(`${api}/info?id=${encodeURIComponent(id)}`);
     const data = await res.json();
-
-    el.querySelector('.up').textContent = data.votes?.up ?? 0;
-    el.querySelector('.down').textContent = data.votes?.down ?? 0;
+    updateVoteCounts(el, data.votes);
+    writeVoteCache(id, data.votes);
   } catch (e) {
     console.warn(`[vote] 加载失败: id=${id}`, e);
   } finally {
@@ -77,12 +127,23 @@ function submitVote(el, value) {
 
   const upEl = el.querySelector('.up');
   const downEl = el.querySelector('.down');
+  const nextVotes = {
+    up: parseVoteCount(upEl?.textContent),
+    down: parseVoteCount(downEl?.textContent)
+  };
 
   // 乐观更新
-  if (value === 'up' && upEl) upEl.textContent = parseVoteCount(upEl.textContent) + 1;
-  if (value === 'down' && downEl) downEl.textContent = parseVoteCount(downEl.textContent) + 1;
+  if (value === 'up' && upEl) {
+    nextVotes.up += 1;
+    upEl.textContent = nextVotes.up;
+  }
+  if (value === 'down' && downEl) {
+    nextVotes.down += 1;
+    downEl.textContent = nextVotes.down;
+  }
 
   storeVote(id, value);
+  writeVoteCache(id, nextVotes);
   markVoted(el, value);
 
   // 后台同步

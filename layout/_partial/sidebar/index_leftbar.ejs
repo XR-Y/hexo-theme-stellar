@@ -115,6 +115,16 @@ function layoutFooterDiv() {
   if (social == null) {
     return ''
   }
+  function socialLabel(item) {
+    if (!item) return ''
+    if (item.url === '/atom.xml') return 'RSS'
+    if (item.icon === 'lucide:github') return 'Github'
+    if (item.icon === 'lucide:mail') return 'Email'
+    if (item.icon === 'lucide:sparkles') return '记忆碎片'
+    if (item.url === 'javascript:switchTheme();') return '外观'
+    if (item.icon === 'lucide:globe') return '世界'
+    return ''
+  }
   var el = '<footer class="footer dis-select">';
   el += '<div class="social-wrap">';
   for (let id of Object.keys(social)) {
@@ -122,6 +132,11 @@ function layoutFooterDiv() {
     if (item.icon && (item.url || item.onclick)) {
       const socialClass = item.url === 'javascript:switchTheme();' ? 'social theme-toggle' : 'social';
       el += '<a class="' + socialClass + '"';
+      const label = socialLabel(item)
+      if (label) {
+        el += ' data-label="' + label + '"';
+        el += ' aria-label="' + label + '"';
+      }
       if (item.title) {
         el += ' title="' + item.title + '"';
       }

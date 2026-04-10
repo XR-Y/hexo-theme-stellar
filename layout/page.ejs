@@ -52,6 +52,19 @@ function autoVoteId() {
     .replace(/^-|-$/g, '')
 }
 
+function hasVoteWidget() {
+  if (page.content?.includes('tag-plugin ds-vote')) {
+    return true
+  }
+  if (layout !== 'post') {
+    return false
+  }
+  if (page.vote === false) {
+    return false
+  }
+  return !!theme.data_services?.vote?.api
+}
+
 function renderAutoVote() {
   if (layout !== 'post') {
     return ''
@@ -115,6 +128,9 @@ function layoutDiv() {
   }
   if (page.menu_id === 'morningpost') {
     el += `<script defer src="/js/services/morningpost-history.js"></script>`
+  }
+  if (hasVoteWidget()) {
+    el += `<script defer src="/js/services/vote.js"></script>`
   }
   return el
 }

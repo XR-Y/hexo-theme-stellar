@@ -25,15 +25,12 @@ hexo.on('ready', () => {
     return;
   }
   const { version, homepage, repository } = require('../../package.json');
-  console.log(``);
-
   const line = '------------------------------------------------';
   hexo.log.info(line);
   hexo.log.info(`Welcome to \x1b[33mStellar ${version}\x1b[0m
 \x1b[32mDOCS\x1b[0m  ${homepage}
 \x1b[32mREPO\x1b[0m  ${repository.url}`);
   hexo.log.info(line);
-  console.log(``);
   // version check
   const checkVersion = require('./lib/version-check');
   checkVersion(hexo, { useCache: true });
