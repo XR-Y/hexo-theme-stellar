@@ -98,6 +98,7 @@ function render_ai_summary_bootstrap() {
 function render_vote_preconnect() {
   const voteApi = theme.data_services?.vote?.api;
   const hasVoteWidget = page.content?.includes('tag-plugin ds-vote')
+    || page.content?.includes('ds-memos')
     || (page.layout === 'post' && page.vote !== false && !!voteApi);
   if (!hasVoteWidget || typeof voteApi !== 'string') {
     return '';
@@ -107,6 +108,14 @@ function render_vote_preconnect() {
     return '';
   }
   return `<link rel="preconnect" href="${origin}" crossorigin>`;
+}
+
+function render_memos_vote_api() {
+  const voteApi = theme.data_services?.vote?.api;
+  if (!page.content?.includes('ds-memos') || !voteApi) {
+    return '';
+  }
+  return `<script>window.stellar=window.stellar||{};window.stellar.memosVoteApi=${JSON.stringify(voteApi)};</script>`;
 }
 
 function custom_inject() {
@@ -219,6 +228,7 @@ function generate_canonical() {
   <meta name="theme-color" content="#f9fafb">
   <title><%- generate_title() %></title>
   <%- render_vote_preconnect() %>
+  <%- render_memos_vote_api() %>
 
   <% if (theme.open_graph && theme.open_graph.enable) { %>
     <%- open_graph(og_args()) %>

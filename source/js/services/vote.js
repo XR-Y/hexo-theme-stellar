@@ -76,6 +76,13 @@ function markVoted(el, value) {
   }
 }
 
+function markVoteUnavailable(el) {
+  el.classList.add('voted');
+  el.querySelectorAll('button').forEach(button => {
+    button.disabled = true;
+  });
+}
+
 function revertVote(el, value) {
   const id = el.dataset.id;
 
@@ -92,6 +99,9 @@ function revertVote(el, value) {
   el.classList.remove('voted', 'active');
   el.querySelector('.vote-up')?.classList.remove('active');
   el.querySelector('.vote-down')?.classList.remove('active');
+  el.querySelectorAll('button').forEach(button => {
+    button.disabled = false;
+  });
   removeVote(id);
 }
 
@@ -144,7 +154,11 @@ function submitVote(el, value) {
 
   storeVote(id, value);
   writeVoteCache(id, nextVotes);
-  markVoted(el, value);
+  if (el.classList.contains('memo-vote')) {
+    markVoteUnavailable(el);
+  } else {
+    markVoted(el, value);
+  }
 
   // 后台同步
   fetch(`${api}/update?id=${encodeURIComponent(id)}&value=${encodeURIComponent(value)}`, {
@@ -159,11 +173,19 @@ function initVotes() {
   document.querySelectorAll('.ds-vote').forEach(el => {
     const { id, api } = el.dataset;
     if (!id || !api) return;
+    if (el.dataset.voteReady === 'true') return;
+    el.dataset.voteReady = 'true';
 
     loadVote(el);
 
     const votedValue = getVotedValue(id);
-    if (votedValue) markVoted(el, votedValue);
+    if (votedValue) {
+      if (el.classList.contains('memo-vote')) {
+        markVoteUnavailable(el);
+      } else {
+        markVoted(el, votedValue);
+      }
+    }
 
     el.querySelector('.vote-up')?.addEventListener('click', () => {
       if (!el.classList.contains('active')) submitVote(el, 'up');
@@ -174,6 +196,9 @@ function initVotes() {
     });
   });
 }
+
+window.StellarVote = window.StellarVote || {};
+window.StellarVote.init = initVotes;
 
 if (document.body) {
   initVotes();

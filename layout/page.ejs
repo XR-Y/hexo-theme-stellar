@@ -65,6 +65,10 @@ function hasVoteWidget() {
   return !!theme.data_services?.vote?.api
 }
 
+function hasMemosWidget() {
+  return page.content?.includes('ds-memos')
+}
+
 function renderAutoVote() {
   if (layout !== 'post') {
     return ''
@@ -130,6 +134,9 @@ function layoutDiv() {
     el += `<script defer src="/js/services/morningpost-history.js"></script>`
   }
   if (hasVoteWidget()) {
+    el += `<script defer src="/js/services/vote.js"></script>`
+  }
+  if (!hasVoteWidget() && hasMemosWidget()) {
     el += `<script defer src="/js/services/vote.js"></script>`
   }
   return el
