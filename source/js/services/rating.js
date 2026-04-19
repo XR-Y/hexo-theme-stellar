@@ -14,8 +14,25 @@ function storeRating(id, value) {
   localStorage.setItem(getRatingKey(id), value);
 }
 
+function removeRating(id) {
+  localStorage.removeItem(getRatingKey(id));
+}
+
 function clearHover(el) {
   el.querySelectorAll('.star').forEach(s => s.classList.remove('hover'));
+}
+
+function clearRated(el) {
+  el.classList.remove('rated');
+  el.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+}
+
+function markRated(el, value) {
+  el.classList.add('rated');
+  el.querySelectorAll('.star').forEach(star => {
+    const v = parseInt(star.dataset.value);
+    star.classList.toggle('active', v <= value);
+  });
 }
 
 function updatePreview(el, avg) {
@@ -57,6 +74,38 @@ function calculateAverage(rating = {}) {
   return votes > 0 ? (total / votes).toFixed(1) : '0.0';
 }
 
+function renderRating(el, rating = {}) {
+  const avg = calculateAverage(rating);
+
+  // 计算评分人数
+  const validScores = Object.entries(rating).filter(([k]) => !isNaN(Number(k)));
+  const totalVotes = validScores.reduce((sum, [, c]) => sum + c, 0);
+
+  // 设置平均分
+  let avgEl = el.querySelector('.avg');
+  if (!avgEl) {
+    avgEl = document.createElement('span');
+    avgEl.className = 'avg';
+    el.appendChild(avgEl);
+  }
+  avgEl.textContent = `(${avg})`;
+
+  // 设置评分人数
+  let countEl = el.querySelector('.count');
+  if (!countEl) {
+    countEl = document.createElement('span');
+    countEl.className = 'count';
+    el.appendChild(countEl);
+  }
+  countEl.textContent = `${totalVotes}`;
+
+  updatePreview(el, avg);
+  const ratedValue = getRatedValue(el.dataset.id);
+  if (ratedValue) {
+    markRated(el, ratedValue);
+  }
+}
+
 async function loadRating(el) {
   const id = el.dataset.id;
   const api = el.dataset.api;
@@ -65,32 +114,7 @@ async function loadRating(el) {
   try {
     const res = await fetch(`${api}/info?id=${encodeURIComponent(id)}`);
     const data = await res.json();
-    const rating = data.rating || {};
-    const avg = calculateAverage(rating);
-
-    // 计算评分人数
-    const validScores = Object.entries(rating).filter(([k]) => !isNaN(Number(k)));
-    const totalVotes = validScores.reduce((sum, [, c]) => sum + c, 0);
-
-    // 设置平均分
-    let avgEl = el.querySelector('.avg');
-    if (!avgEl) {
-      avgEl = document.createElement('span');
-      avgEl.className = 'avg';
-      el.appendChild(avgEl);
-    }
-    avgEl.textContent = `(${avg})`;
-
-    // 设置评分人数
-    let countEl = el.querySelector('.count');
-    if (!countEl) {
-      countEl = document.createElement('span');
-      countEl.className = 'count';
-      el.appendChild(countEl);
-    }
-    countEl.textContent = `${totalVotes}`;
-
-    updatePreview(el, avg);
+    renderRating(el, data.rating || {});
   } catch (e) {
     console.warn(`[rating] 加载失败: id=${id}`, e);
   }
@@ -102,15 +126,54 @@ async function submitRating(el, value) {
   if (!id || !api || hasRated(id)) return;
 
   storeRating(id, value);
-  el.classList.add('rated');
+  markRated(el, parseInt(value));
 
   try {
-    await fetch(`${api}/update?id=${encodeURIComponent(id)}&value=${value}`, {
+    const res = await fetch(`${api}/update?id=${encodeURIComponent(id)}&value=${value}`, {
       method: 'POST'
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     loadRating(el);
   } catch (e) {
     console.warn(`[rating] 提交失败: id=${id}`, e);
+    removeRating(id);
+    clearRated(el);
+    loadRating(el);
+  }
+}
+
+async function cancelRating(el, value) {
+  const id = el.dataset.id;
+  const api = el.dataset.api;
+  if (!id || !api || getRatedValue(id) !== parseInt(value)) return;
+
+  const confirmed = await utils.confirmAction({
+    title: '要取消这次评分吗？',
+    message: '取消后会同步更新这篇文章的评分统计。',
+    confirmText: '确认取消',
+    cancelText: '保留评分'
+  });
+  if (!confirmed) return;
+
+  removeRating(id);
+  clearRated(el);
+
+  try {
+    const res = await fetch(`${api}/cancel?id=${encodeURIComponent(id)}&value=${value}`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data?.rating) {
+      renderRating(el, data.rating);
+    } else {
+      loadRating(el);
+    }
+  } catch (e) {
+    console.warn(`[rating] 取消失败，恢复评分: id=${id}`, e);
+    storeRating(id, value);
+    markRated(el, parseInt(value));
+    loadRating(el);
   }
 }
 
@@ -123,13 +186,17 @@ function initRatings() {
     setupHoverEffect(el);
 
     if (hasRated(id)) {
-      el.classList.add('rated');
+      markRated(el, getRatedValue(id));
     }
 
     el.querySelectorAll('.star').forEach(star => {
       const value = star.dataset.value;
       star.addEventListener('click', () => {
-        if (!hasRated(id)) submitRating(el, value);
+        if (parseInt(value) === getRatedValue(id)) {
+          cancelRating(el, value);
+        } else if (!hasRated(id)) {
+          submitRating(el, value);
+        }
       });
     });
   });

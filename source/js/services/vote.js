@@ -69,6 +69,8 @@ function updateVoteCounts(el, votes) {
 
 function markVoted(el, value) {
   el.classList.add('voted');
+  el.querySelector('.vote-up')?.classList.remove('active');
+  el.querySelector('.vote-down')?.classList.remove('active');
   if (value === 'up') {
     el.querySelector('.vote-up')?.classList.add('active');
   } else if (value === 'down') {
@@ -76,10 +78,12 @@ function markVoted(el, value) {
   }
 }
 
-function markVoteUnavailable(el) {
-  el.classList.add('voted');
+function clearVoted(el) {
+  el.classList.remove('voted', 'active');
+  el.querySelector('.vote-up')?.classList.remove('active');
+  el.querySelector('.vote-down')?.classList.remove('active');
   el.querySelectorAll('button').forEach(button => {
-    button.disabled = true;
+    button.disabled = false;
   });
 }
 
@@ -96,13 +100,27 @@ function revertVote(el, value) {
   }
 
   // 回退样式和状态
-  el.classList.remove('voted', 'active');
-  el.querySelector('.vote-up')?.classList.remove('active');
-  el.querySelector('.vote-down')?.classList.remove('active');
-  el.querySelectorAll('button').forEach(button => {
-    button.disabled = false;
-  });
+  clearVoted(el);
   removeVote(id);
+}
+
+function currentVoteCounts(el) {
+  return {
+    up: parseVoteCount(el.querySelector('.up')?.textContent),
+    down: parseVoteCount(el.querySelector('.down')?.textContent)
+  };
+}
+
+function adjustVoteCount(el, value, delta) {
+  const nextVotes = currentVoteCounts(el);
+  if (value === 'up') {
+    nextVotes.up = Math.max(0, nextVotes.up + delta);
+  } else if (value === 'down') {
+    nextVotes.down = Math.max(0, nextVotes.down + delta);
+  }
+  updateVoteCounts(el, nextVotes);
+  writeVoteCache(el.dataset.id, nextVotes);
+  return nextVotes;
 }
 
 async function loadVote(el) {
@@ -130,43 +148,64 @@ async function loadVote(el) {
   }
 }
 
-function submitVote(el, value) {
+async function submitVote(el, value) {
   const id = el.dataset.id;
   const api = el.dataset.api;
   if (!id || !api || hasVoted(id)) return;
 
-  const upEl = el.querySelector('.up');
-  const downEl = el.querySelector('.down');
-  const nextVotes = {
-    up: parseVoteCount(upEl?.textContent),
-    down: parseVoteCount(downEl?.textContent)
-  };
-
   // 乐观更新
-  if (value === 'up' && upEl) {
-    nextVotes.up += 1;
-    upEl.textContent = nextVotes.up;
-  }
-  if (value === 'down' && downEl) {
-    nextVotes.down += 1;
-    downEl.textContent = nextVotes.down;
-  }
+  const nextVotes = adjustVoteCount(el, value, 1);
 
   storeVote(id, value);
   writeVoteCache(id, nextVotes);
-  if (el.classList.contains('memo-vote')) {
-    markVoteUnavailable(el);
-  } else {
-    markVoted(el, value);
-  }
+  markVoted(el, value);
 
-  // 后台同步
-  fetch(`${api}/update?id=${encodeURIComponent(id)}&value=${encodeURIComponent(value)}`, {
-    method: 'POST'
-  }).catch(e => {
+  try {
+    const res = await fetch(`${api}/update?id=${encodeURIComponent(id)}&value=${encodeURIComponent(value)}`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (e) {
     console.warn(`[vote] 后台同步失败，撤销投票: id=${id}`, e);
     revertVote(el, value);
+  }
+}
+
+async function cancelVote(el, value) {
+  const id = el.dataset.id;
+  const api = el.dataset.api;
+  if (!id || !api || getVotedValue(id) !== value) return;
+
+  const confirmed = await utils.confirmAction({
+    title: '要取消这次反馈吗？',
+    message: '取消后会同步更新这一项的统计数字。',
+    confirmText: '确认取消',
+    cancelText: '保留反馈'
   });
+  if (!confirmed) return;
+
+  const previousVotes = currentVoteCounts(el);
+  adjustVoteCount(el, value, -1);
+  removeVote(id);
+  clearVoted(el);
+
+  try {
+    const res = await fetch(`${api}/cancel?id=${encodeURIComponent(id)}&value=${encodeURIComponent(value)}`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data?.votes) {
+      updateVoteCounts(el, data.votes);
+      writeVoteCache(id, data.votes);
+    }
+  } catch (e) {
+    console.warn(`[vote] 取消失败，恢复投票: id=${id}`, e);
+    updateVoteCounts(el, previousVotes);
+    writeVoteCache(id, previousVotes);
+    storeVote(id, value);
+    markVoted(el, value);
+  }
 }
 
 function initVotes() {
@@ -180,19 +219,23 @@ function initVotes() {
 
     const votedValue = getVotedValue(id);
     if (votedValue) {
-      if (el.classList.contains('memo-vote')) {
-        markVoteUnavailable(el);
-      } else {
-        markVoted(el, votedValue);
-      }
+      markVoted(el, votedValue);
     }
 
     el.querySelector('.vote-up')?.addEventListener('click', () => {
-      if (!el.classList.contains('active')) submitVote(el, 'up');
+      if (el.querySelector('.vote-up')?.classList.contains('active')) {
+        cancelVote(el, 'up');
+      } else if (!hasVoted(id)) {
+        submitVote(el, 'up');
+      }
     });
 
     el.querySelector('.vote-down')?.addEventListener('click', () => {
-      if (!el.classList.contains('active')) submitVote(el, 'down');
+      if (el.querySelector('.vote-down')?.classList.contains('active')) {
+        cancelVote(el, 'down');
+      } else if (!hasVoted(id)) {
+        submitVote(el, 'down');
+      }
     });
   });
 }

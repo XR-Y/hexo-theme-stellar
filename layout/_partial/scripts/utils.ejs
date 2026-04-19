@@ -258,6 +258,50 @@
         tryRequest();
       });
     },
+    confirmAction: ({ title = '确认操作', message = '', confirmText = '确认', cancelText = '取消' } = {}) => {
+      return new Promise(resolve => {
+        const existing = document.querySelector('.stellar-confirm-mask');
+        if (existing) existing.remove();
+
+        const mask = document.createElement('div');
+        mask.className = 'stellar-confirm-mask';
+        mask.innerHTML = `
+          <div class="stellar-confirm" role="dialog" aria-modal="true" aria-labelledby="stellar-confirm-title">
+            <div class="stellar-confirm-title" id="stellar-confirm-title">${title}</div>
+            ${message ? `<div class="stellar-confirm-message">${message}</div>` : ''}
+            <div class="stellar-confirm-actions">
+              <button type="button" class="stellar-confirm-btn is-cancel">${cancelText}</button>
+              <button type="button" class="stellar-confirm-btn is-confirm">${confirmText}</button>
+            </div>
+          </div>
+        `;
+
+        const close = value => {
+          window.removeEventListener('keydown', onKeydown);
+          mask.classList.remove('is-visible');
+          window.setTimeout(() => {
+            mask.remove();
+            resolve(value);
+          }, 140);
+        };
+
+        mask.addEventListener('click', event => {
+          if (event.target === mask) close(false);
+        });
+        mask.querySelector('.is-cancel').addEventListener('click', () => close(false));
+        mask.querySelector('.is-confirm').addEventListener('click', () => close(true));
+        const onKeydown = event => {
+          if (event.key === 'Escape') {
+            window.removeEventListener('keydown', onKeydown);
+            close(false);
+          }
+        };
+        window.addEventListener('keydown', onKeydown);
+        document.body.appendChild(mask);
+        window.requestAnimationFrame(() => mask.classList.add('is-visible'));
+        mask.querySelector('.is-confirm').focus({ preventScroll: true });
+      });
+    },
     /********************** requestAnimationFrame ********************************/
     // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
     // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
